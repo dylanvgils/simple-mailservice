@@ -6,13 +6,14 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/julienschmidt/httprouter"
 )
 
 type response struct {
 	Writer  http.ResponseWriter `json:"-"`
-	Code    int                 `json:"code,int"`
-	Message string              `json:"message,string"`
+	Code    int                 `json:"code"`
+	Message string              `json:"message"`
 }
 
 func (resp *response) sendResponse() {
@@ -31,7 +32,7 @@ func (resp *response) sendResponse() {
 
 func newResponse(w http.ResponseWriter) *response {
 	return &response{
-		Writer: w,
+		Writer:  w,
 		Code:    200,
 		Message: "Success",
 	}
@@ -48,12 +49,21 @@ func readBody(req *http.Request) []byte {
 
 func handleRequest(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	resp := newResponse(w)
-	m := newMail(req.RemoteAddr)
+	m := newMail(req.Header.Get("X-Real-IP"))
 
 	err := json.Unmarshal(readBody(req), &m)
 	if err != nil {
 		resp.Code = 400
 		resp.Message = "Error while parsing json"
+		resp.sendResponse()
+		return
+	}
+
+	if valid, _ := govalidator.ValidateStruct(m); !valid {
+		resp.Code = 400
+		resp.Message = "Request body invalid"
+		resp.sendResponse()
+		return
 	}
 
 	m.sendMail()

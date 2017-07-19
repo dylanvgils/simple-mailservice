@@ -14,7 +14,7 @@ const requestTemplate = `
 	{
 		"personalizations": [{
 			"to": [{
-				"email": "{{ .To.Address }}"
+				"email": "{{ .To }}"
 			}],
 			"subject": "{{ .Subject }}"
 		}],
@@ -38,24 +38,24 @@ const requestTemplate = `
 	}`
 
 type mail struct {
-	SenderIP string    `json:"-"`
-	DateTime time.Time `json:"-"`
-	From     email     `json:"from,omitempty"`
-	To       email     `json:"-"`
-	Subject  string    `json:"subject,omitempty"`
-	Content  string    `json:"content,omitempty"`
+	SenderIP string    `valid:"-" json:"-"`
+	DateTime time.Time `valid:"-" json:"-"`
+	From     email     `valid:"required" json:"from"`
+	To       string    `valid:"email,required" json:"-"`
+	Subject  string    `valid:"required" json:"subject"`
+	Content  string    `valid:"required" json:"content"`
 }
 
 type email struct {
-	Name    string `json:"name,omitempty"`
-	Address string `json:"address,omitempty"`
+	Name    string `valid:"required" json:"name"`
+	Address string `valid:"email,required" json:"address"`
 }
 
 func newMail(senderIP string) *mail {
 	return &mail{
 		SenderIP: senderIP,
 		DateTime: time.Now(),
-		To:       email{Address: os.Getenv("TO_EMAIL")},
+		To:       os.Getenv("TO_EMAIL"),
 	}
 }
 
