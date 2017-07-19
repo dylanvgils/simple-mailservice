@@ -40,6 +40,7 @@ const requestTemplate = `
 type mail struct {
 	SenderIP string    `valid:"-" json:"-"`
 	DateTime time.Time `valid:"-" json:"-"`
+	Antispam string    `valid:"-" json:"antispam"`
 	From     email     `valid:"required" json:"from"`
 	To       string    `valid:"email,required" json:"-"`
 	Subject  string    `valid:"required" json:"subject"`
@@ -55,6 +56,7 @@ func newMail(senderIP string) *mail {
 	return &mail{
 		SenderIP: senderIP,
 		DateTime: time.Now(),
+		Antispam: "spam",
 		To:       os.Getenv("TO_EMAIL"),
 	}
 }
