@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -59,14 +60,18 @@ func handleRequest(w http.ResponseWriter, req *http.Request, _ httprouter.Params
 		return
 	}
 
-	if valid, _ := govalidator.ValidateStruct(m); !valid {
+	if valid, err := govalidator.ValidateStruct(m); !valid {
+		fmt.Println(err)
 		resp.Code = 400
 		resp.Message = "Request body invalid"
 		resp.sendResponse()
 		return
 	}
 
-	m.sendMail()
+	if govalidator.IsNull(m.Antispam) {
+		m.sendMail()
+	}
+
 	resp.sendResponse()
 }
 
