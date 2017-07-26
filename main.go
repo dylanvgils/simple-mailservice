@@ -69,6 +69,7 @@ func handleRequest(w http.ResponseWriter, req *http.Request, _ httprouter.Params
 	}
 
 	if govalidator.IsNull(m.Antispam) {
+		fmt.Println("send")
 		m.sendMail()
 	}
 
