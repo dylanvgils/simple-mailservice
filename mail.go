@@ -2,9 +2,10 @@ package main
 
 import (
 	"bytes"
-	"html/template"
 	"log"
 	"os"
+	"strings"
+	"text/template"
 	"time"
 
 	sendgrid "github.com/sendgrid/sendgrid-go"
@@ -23,11 +24,8 @@ const requestTemplate = `
 			"email": "{{ .From.Address }}"
 		},
 		"content": [{
-			"type": "text/plain",
-			"value": "{{ .Content }}\n------------------------------------\nSenderIP: {{ .SenderIP }}; Date: {{ .DateTime }}"
-		}, {
 			"type": "text/html",
-			"value": "<html><body>{{ .Content }}<hr />SenderIP: {{ .SenderIP }}; Date: {{ .DateTime }}</body></html>"
+			"value": "<html><body>{{ replaceNewLine .Content }}<hr />SenderIP: {{ .SenderIP }}; Date: {{ .DateTime }}</body></html>"
 		}],
 		"tracking_settings": {
 			"click_tracking": { "enable": false },
@@ -64,7 +62,12 @@ func newMail(senderIP string) *mail {
 func (m *mail) parseTemplate() []byte {
 	var tpl bytes.Buffer
 
-	t := template.Must(template.New("Mail Request").Parse(requestTemplate))
+	t := template.Must(template.New("").Funcs(template.FuncMap{
+		"replaceNewLine": func(in string) string {
+			return strings.Replace(in, "\n", "<br />", -1)
+		},
+	}).Parse(requestTemplate))
+
 	err := t.Execute(&tpl, m)
 	if err != nil {
 		log.Fatalln("Error: Encounterd error while parsing template, errror:", err)
